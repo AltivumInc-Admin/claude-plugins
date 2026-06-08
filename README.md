@@ -7,7 +7,7 @@ team can install any Altivum plugin from it.
 
 ```bash
 # from a git remote (once it's pushed)
-claude plugin marketplace add AltivumInc-Admin/altivum-claude-plugins
+claude plugin marketplace add AltivumInc-Admin/claude-plugins
 # or from a local clone
 claude plugin marketplace add ~/dev/altivum-claude-plugins
 ```
