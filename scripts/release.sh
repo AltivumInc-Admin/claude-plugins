@@ -50,7 +50,8 @@ if git diff --cached --quiet; then
   exit 0
 fi
 git commit -m "release: $PLUGIN v$VER"
-git tag -f "$PLUGIN-v$VER"
 git push origin HEAD
-git push -f origin "$PLUGIN-v$VER"
+# Official tagger: creates the canonical {name}--v{version} tag, validates that
+# plugin.json and the marketplace entry agree, then pushes it.
+claude plugin tag "plugins/$PLUGIN" --push --force --message "release %s"
 echo "Released $PLUGIN v$VER."
