@@ -1,5 +1,5 @@
 ---
-description: Continuous, quality-gated refinement loop — recon finds improvements, you pick, agents build them in parallel, a high quality bar (incl. live functional operation) must pass, then it auto-opens a PR and auto-merges on green, and loops. One routine stop: the pick.
+description: Continuous, quality-gated refinement loop — recon finds improvements, you pick, agents build them in parallel, a high quality bar (incl. live functional operation) must pass, then it auto-opens a PR and auto-merges on green, and loops with one routine stop (the pick).
 argument-hint: "[path] [lenses…] [--auto-pick[=N] --max-cycles=N --confirm-merge --no-merge --max-parallel=N --max-remediation=N]"
 ---
 
