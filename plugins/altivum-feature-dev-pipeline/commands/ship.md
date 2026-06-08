@@ -10,7 +10,7 @@ You are orchestrating Altivum's end-to-end feature pipeline for: **$ARGUMENTS**
 Run the four phases **in order**. This is a human-in-the-loop pipeline: after each phase, **stop, summarize the result, and wait for the user's explicit go-ahead** before starting the next phase. Never auto-advance past a gate.
 
 The phase logic lives in the sibling commands of this plugin — apply the same instructions they contain:
-- `/altivum-feature-dev-pipeline:eval`
+- `/altivum-feature-dev-pipeline:eval` (default analysis lens) — or a focused lens (`:improve`, `:improve-ui`, `:improve-x2`, `:enhance`) or the full `:recon` audit
 - `/altivum-feature-dev-pipeline:plan`
 - `/altivum-feature-dev-pipeline:execute`
 - `/altivum-feature-dev-pipeline:deploy`
@@ -18,6 +18,7 @@ The phase logic lives in the sibling commands of this plugin — apply the same 
 ## Sequence
 
 1. **EVAL** — Run the eval phase to understand the codebase and surface prioritized recommendations. If `$ARGUMENTS` already names a specific change, scope the eval to the relevant area. Present the numbered recommendations.
+   - The analysis lens is swappable: default to `:eval` (health/architecture), or run a targeted lens (`:improve`, `:improve-ui`, `:improve-x2`, `:enhance`) or the full `:recon` audit when the goal calls for it. The numbered recommendations feed the same PLAN gate.
    - **GATE:** Ask which recommendation(s) to carry forward (or confirm the stated goal). Wait.
 
 2. **PLAN** — For the chosen item(s), produce the detailed implementation plan(s) (objective, steps, file changes, tests, risks, effort). Surface any decisions only the user can make.
