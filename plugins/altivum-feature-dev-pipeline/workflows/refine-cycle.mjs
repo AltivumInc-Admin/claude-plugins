@@ -2,7 +2,7 @@ export const meta = {
   name: 'altivum-refine-cycle',
   description: 'One refine cycle: parallel worktree build of picked items, integrate + automated checks, adversarial review panel with verification',
   phases: [
-    { title: 'Build', detail: 'build each picked item in its own worktree, in parallel' },
+    { title: 'Build', detail: 'build each picked item in its own per-cycle worktree, in parallel' },
     { title: 'Integrate', detail: 'merge item branches, run automated checks, clean up worktrees' },
     { title: 'Review', detail: 'adversarial review panel over the integrated diff, then verify findings' },
   ],
@@ -33,12 +33,13 @@ const INTEGRATE_SCHEMA = {
     checks: {
       type: 'object',
       additionalProperties: false,
-      required: ['build', 'lint', 'typecheck', 'test'],
+      required: ['build', 'lint', 'typecheck', 'test', 'coverage'],
       properties: {
         build: { type: 'string', enum: ['pass', 'fail', 'not-applicable'] },
         lint: { type: 'string', enum: ['pass', 'fail', 'not-applicable'] },
         typecheck: { type: 'string', enum: ['pass', 'fail', 'not-applicable'] },
         test: { type: 'string', enum: ['pass', 'fail', 'not-applicable'] },
+        coverage: { type: 'string', enum: ['pass', 'fail', 'not-applicable'] },
       },
     },
     conflictedItems: { type: 'array', items: { type: 'string' } },
@@ -84,33 +85,51 @@ const base = (args && args.base) || 'main'
 const cycleBranch = (args && args.cycleBranch) || 'refine/cycle'
 const repoRoot = (args && args.repoRoot) || '.'
 const checks = (args && args.checks) || {}
+const maxParallel = (args && Number(args.maxParallel) > 0) ? Number(args.maxParallel) : 0
 
 if (!items.length) {
   return { error: 'no items provided', integratedBranch: cycleBranch, built: [], failedItems: [], confirmedReviewDefects: [] }
 }
 
+// Per-cycle branch prefix so item branches never collide across cycles. cycleBranch is
+// already unique per cycle (refine/cycle-<N>-<slug>); sanitize it into a branch-safe token.
+const cyclePrefix = cycleBranch.replace(/[^a-zA-Z0-9._-]/g, '-')
+
 log(`refine-cycle: ${items.length} item(s) onto ${cycleBranch} from ${base}`)
 
-// Phase 1 — parallel build, each item on its own branch in its own worktree.
+// Phase 1 — build each item on its OWN per-cycle branch in its OWN worktree.
 phase('Build')
-const built = await parallel(
-  items.map((it) => () =>
-    agent(
-      `Implement ONE refinement item in the git repo at ${repoRoot}.\n` +
-        `Item id: ${it.id}\nTitle: ${it.title}\nDetails: ${it.desc || ''}\n\n` +
-        `Steps (use Bash; keep the change scoped to THIS item only):\n` +
-        `1. Make an isolated worktree on a fresh branch:\n` +
-        `   WT=$(mktemp -d)\n` +
-        `   git -C ${repoRoot} worktree add -B refine/item-${it.id} "$WT" ${base}\n` +
-        `   cd "$WT"\n` +
-        `2. Implement the item with TDD (write a failing test, then make it pass), following existing project conventions.\n` +
-        `3. Commit with a clear message. Do NOT remove the worktree — the integrator needs the branch.\n` +
-        `4. Report status 'built' with branch refine/item-${it.id}, the worktree path "$WT", the commit SHA, a one-line summary, and files changed.\n` +
-        `If you cannot implement it cleanly, make NO commit and report status 'failed' with a reason.`,
-      { label: `build:${it.id}`, phase: 'Build', schema: BUILD_SCHEMA },
-    ),
-  ),
-)
+const buildThunk = (it) => () =>
+  agent(
+    `Implement ONE refinement item in the git repo at ${repoRoot}.\n` +
+      `Item id: ${it.id}\nTitle: ${it.title}\nDetails: ${it.desc || ''}\n\n` +
+      `Branch to create: refine/item-${cyclePrefix}-${it.id}\n\n` +
+      `Steps (use Bash; keep the change scoped to THIS item only):\n` +
+      `1. Make an isolated worktree on a fresh branch. Other item builders may be creating worktrees against this SAME repo concurrently, so retry on lock/contention errors:\n` +
+      `   WT=$(mktemp -d)\n` +
+      `   for attempt in 1 2 3 4 5; do\n` +
+      `     git -C ${repoRoot} worktree add -B refine/item-${cyclePrefix}-${it.id} "$WT" ${base} && break\n` +
+      `     sleep "$attempt"   # back off; another builder likely holds the .git/worktrees lock\n` +
+      `   done\n` +
+      `   cd "$WT"\n` +
+      `2. Implement the item with TDD (write a failing test, then make it pass), following existing project conventions.\n` +
+      `3. Commit with a clear message. Do NOT remove the worktree — the integrator needs the branch.\n` +
+      `4. Report status 'built' with branch refine/item-${cyclePrefix}-${it.id}, the worktree path "$WT", the commit SHA, a one-line summary, and files changed.\n` +
+      `If you cannot implement it cleanly, make NO commit and report status 'failed' with a reason.`,
+    { label: `build:${cyclePrefix}:${it.id}`, phase: 'Build', schema: BUILD_SCHEMA },
+  )
+
+let built = []
+if (maxParallel > 0) {
+  // Honor an explicit concurrency cap by building in sequential chunks.
+  for (let i = 0; i < items.length; i += maxParallel) {
+    const chunk = items.slice(i, i + maxParallel)
+    const r = await parallel(chunk.map(buildThunk))
+    built = built.concat(r)
+  }
+} else {
+  built = await parallel(items.map(buildThunk))
+}
 const okItems = built.filter((b) => b && b.status === 'built')
 const failedItems = built.filter((b) => b && b.status === 'failed')
 
@@ -124,14 +143,15 @@ const integration = await agent(
     `Steps (Bash; capture REAL output):\n` +
     `1. git -C ${repoRoot} checkout -B ${cycleBranch} ${base}\n` +
     `2. For each item branch, merge it: git -C ${repoRoot} merge --no-ff <branch>. If it conflicts, run git -C ${repoRoot} merge --abort, record that item id in conflictedItems, and skip it (do not block the others).\n` +
-    `3. Run the automated checks and record each result (pass / fail / not-applicable), citing key output:\n` +
+    `3. Run the automated checks and record each result, citing key output:\n` +
     `   build: ${checks.build || '(auto-detect from package.json scripts / Makefile)'}\n` +
     `   lint: ${checks.lint || '(auto-detect)'}\n` +
     `   typecheck: ${checks.typecheck || '(auto-detect)'}\n` +
     `   test: ${checks.test || '(auto-detect)'}\n` +
-    `   A check whose tool/script does not exist is 'not-applicable'; a non-zero run is 'fail'.\n` +
-    `4. Clean up the item worktrees so they don't accumulate: for each path in [${worktreeList || 'none'}] run git -C ${repoRoot} worktree remove --force <path> (ignore errors), then git -C ${repoRoot} worktree prune.\n` +
-    `Report the integrated branch (${cycleBranch}), the four check results, the conflictedItems list, and brief notes.`,
+    `   coverage: ${checks.coverage || '(auto-detect; run coverage and confirm it did NOT decrease vs ' + base + ')'}\n` +
+    `   Mark a check 'not-applicable' ONLY when the project genuinely has no such step (e.g. no typechecker in a plain-JS repo). If a check is EXPECTED for this kind of project but you cannot detect or run it, mark it 'fail' and explain in notes — never pass it off as 'not-applicable'. Any non-zero run is 'fail'.\n` +
+    `4. Clean up the item worktrees so they don't accumulate: for each path in [${worktreeList || 'none'}] run git -C ${repoRoot} worktree remove --force <path> (ignore errors), then ALWAYS run git -C ${repoRoot} worktree prune at the end.\n` +
+    `Report the integrated branch (${cycleBranch}), all five check results (build/lint/typecheck/test/coverage), the conflictedItems list, and brief notes.`,
   { label: 'integrate', phase: 'Integrate', schema: INTEGRATE_SCHEMA },
 )
 

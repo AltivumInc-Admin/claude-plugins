@@ -145,8 +145,8 @@ infrastructure:
 ## Refine over time
 
 - Edit any `commands/*.md` or `agents/*.md` to improve a phase or lens — they're just prompts.
-- Edit `workflows/audit.mjs` to tune the `recon` fan-out (which lenses, which focus areas).
-- **Bump `version` in `.claude-plugin/plugin.json`** when you cut a release; reinstall to pick up changes. (This release: `0.3.0` — added the five analysis lenses, three read-only analysis subagents, and the Workflow-powered `recon` audit.)
+- Edit `workflows/audit.mjs` / `workflows/refine-cycle.mjs` to tune the `recon` fan-out or the `refine` cycle engine.
+- **Bump `version` in `.claude-plugin/plugin.json`** when you cut a release; reinstall to pick up changes. (This release: `0.4.0` — added the `/refine` continuous quality-gated loop, the `functional-verifier` subagent, and the `refine-cycle.mjs` per-cycle engine, on top of 0.3.0's analysis lenses + `recon` audit.)
 - Add more automation under `hooks/` and more subagents under `agents/`.
 
 ## Going headless (CI)
