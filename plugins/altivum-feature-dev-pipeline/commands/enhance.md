@@ -1,11 +1,11 @@
 ---
-description: UX-friction lens — traces real user flows and proposes exactly 3 code-grounded fixes for the friction users actually hit, ranked by impact.
+description: UX-friction lens — traces real user flows and proposes up to 3 code-grounded fixes for the friction users actually hit, ranked by impact.
 argument-hint: "[optional flow/area to scope, e.g. 'checkout' or 'auth']"
 ---
 
 # /enhance — UX-friction lens
 
-Scan the frontend and backend to find where the existing user experience actually hurts, and propose 3 concrete, code-grounded fixes ranked by user impact. Every recommendation must reference specific files/patterns — no generic advice. Scope to **$ARGUMENTS** if provided.
+Scan the frontend and backend to find where the existing user experience actually hurts, and propose up to 3 concrete, code-grounded fixes ranked by user impact. Every recommendation must reference specific files/patterns — no generic advice. Scope to **$ARGUMENTS** if provided.
 
 Distinct from siblings: this is **not** visual polish (`:improve-ui`), bold product moves (`:improve`), researched trends (`:improve-x2`), or architecture health (`:eval`). It's the friction in flows that already "work."
 

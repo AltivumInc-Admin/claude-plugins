@@ -9,8 +9,7 @@ with five front-of-pipeline analysis lenses and a Workflow-powered multi-lens au
 ```
 altivum-feature-dev-pipeline/
 ├── .claude-plugin/
-│   ├── plugin.json          # manifest (name, version — bump to release updates)
-│   └── marketplace.json     # lets this repo double as an installable marketplace
+│   └── plugin.json          # manifest (name, version — bump to release updates)
 ├── commands/
 │   ├── ship.md              # /…:ship — orchestrator: runs all 4 phases with approval gates
 │   ├── eval.md              # /…:eval — empirical health & architecture audit

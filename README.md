@@ -38,6 +38,8 @@ commits + tags (`<plugin>-v<version>`) + pushes to `claude-plugins-public`.
 altivum-claude-plugins/
 ├── .claude-plugin/
 │   └── marketplace.json          # lists every plugin (source = subdir path)
+├── scripts/
+│   └── release.sh                # mirror + validate + tag + push a plugin to the public repo
 └── plugins/
     └── altivum-feature-dev-pipeline/
         ├── .claude-plugin/plugin.json

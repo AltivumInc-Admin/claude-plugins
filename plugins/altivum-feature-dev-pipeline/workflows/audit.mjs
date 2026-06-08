@@ -55,16 +55,18 @@ phase('Analyze')
 const perLens = await parallel(
   lenses.map((name) => async () => {
     const cfg = LENS_CONFIG[name]
-    const findings = await parallel(
+    const results = await parallel(
       cfg.focuses.map((focus) => () =>
         agent(
           `Analyze ${scope} for the "${focus}" focus, in service of the ${name} lens ` +
             `(${cfg.lens}). Return structured, file-grounded findings for this focus only; do not rank.`,
           { label: `${name}:${focus}`, phase: 'Analyze', agentType: cfg.agentType },
-        ),
+        ).then((text) => ({ focus, text })),
       ),
     )
-    return { lens: name, label: cfg.label, focuses: cfg.focuses, findings: findings.filter(Boolean) }
+    // Pair each finding with its focus BEFORE filtering, so a null/failed agent
+    // result can be dropped without shifting the remaining focus labels.
+    return { lens: name, label: cfg.label, findings: results.filter((r) => r && r.text) }
   }),
 )
 
@@ -75,7 +77,7 @@ const dossier = lensesWithFindings
   .map(
     (l) =>
       `### Lens: ${l.label}\n` +
-      l.findings.map((f, i) => `#### Focus: ${l.focuses[i] || `finding ${i + 1}`}\n${f}`).join('\n\n'),
+      l.findings.map((f) => `#### Focus: ${f.focus}\n${f.text}`).join('\n\n'),
   )
   .join('\n\n---\n\n')
 
