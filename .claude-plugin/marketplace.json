@@ -8,7 +8,7 @@
     {
       "name": "altivum-feature-dev-pipeline",
       "source": "./plugins/altivum-feature-dev-pipeline",
-      "description": "eval -> plan -> execute -> deploy feature-development pipeline (/ship orchestrator + phase commands, five analysis lenses [eval/improve/improve-ui/improve-x2/enhance] + Workflow-powered /recon audit, read-only analysis & review subagents, blocking pre-deploy gate)."
+      "description": "eval -> plan -> execute -> deploy feature-development pipeline (/ship orchestrator + phase commands, five analysis lenses + Workflow-powered /recon audit + /refine continuous quality-gated loop with auto-PR/auto-merge, read-only analysis & review subagents, blocking pre-deploy gate)."
     }
   ]
 }

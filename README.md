@@ -30,7 +30,7 @@ commits + tags (`<plugin>-v<version>`) + pushes to `claude-plugins-public`.
 
 | Plugin | Version | What it does |
 |--------|---------|--------------|
-| [`altivum-feature-dev-pipeline`](plugins/altivum-feature-dev-pipeline) | 0.3.0 | `eval → plan → execute → deploy` pipeline: a `/ship` orchestrator + phase commands, five analysis lenses (`eval`/`improve`/`improve-ui`/`improve-x2`/`enhance`) + Workflow-powered `/recon` audit, read-only analysis & review subagents, and a blocking pre-deploy gate. |
+| [`altivum-feature-dev-pipeline`](plugins/altivum-feature-dev-pipeline) | 0.4.0 | `eval → plan → execute → deploy` pipeline: a `/ship` orchestrator + phase commands, five analysis lenses + `/recon` audit + `/refine` continuous quality-gated loop (auto-PR/auto-merge), read-only analysis & review subagents, and a blocking pre-deploy gate. |
 
 ## Repo layout
 

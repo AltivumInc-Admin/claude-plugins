@@ -1,10 +1,10 @@
 {
   "name": "altivum-feature-dev-pipeline",
-  "description": "Altivum's eval -> plan -> execute -> deploy feature-development pipeline as one refinable, versioned workflow. Provides a /ship orchestrator, five front-of-pipeline analysis lenses (eval, improve, improve-ui, improve-x2, enhance) plus a Workflow-powered /recon multi-lens audit, the read-only codebase-analyzer/ui-auditor/frontier-researcher and deploy-validator/security-reviewer subagents, and a blocking production-deploy gate.",
-  "version": "0.3.0",
+  "description": "Altivum's eval -> plan -> execute -> deploy feature-development pipeline as one refinable, versioned workflow. Provides a /ship orchestrator, five analysis lenses (eval, improve, improve-ui, improve-x2, enhance), a Workflow-powered /recon multi-lens audit, and a /refine continuous quality-gated loop (parallel build, live functional verification, auto-PR + auto-merge on green). Includes read-only codebase-analyzer/ui-auditor/frontier-researcher/functional-verifier and deploy-validator/security-reviewer subagents and a blocking production-deploy gate.",
+  "version": "0.4.0",
   "author": { "name": "Altivum Inc.", "url": "https://altivum.io" },
   "homepage": "https://github.com/AltivumInc-Admin/claude-plugins-public",
   "repository": "https://github.com/AltivumInc-Admin/claude-plugins-public",
   "license": "Apache-2.0",
-  "keywords": ["workflow", "pipeline", "eval", "plan", "execute", "deploy", "aws", "improve", "ui", "research", "audit"]
+  "keywords": ["workflow", "pipeline", "eval", "plan", "execute", "deploy", "aws", "improve", "ui", "research", "audit", "refine", "loop"]
 }
