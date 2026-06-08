@@ -765,12 +765,19 @@ const brief = await agent(
 return { scope, lenses, brief }
 ````
 
-- [ ] **Step 2: Syntax-check the script (Node parses ESM + top-level await)**
+- [ ] **Step 2: Syntax-check the script (faithful to the Workflow runtime model)**
 
-Run:
+Do NOT use `node --check` here: a Workflow script begins with `export const meta` (ESM) yet uses top-level `await`/`return` because the runtime wraps the body in an async function — `node --check` rejects that as "Illegal return statement". Instead compile the body the way the runtime does (strip `export`, wrap as an async function):
 ```bash
 cd /Users/cperez/dev/altivum-claude-plugins
-node --check plugins/altivum-feature-dev-pipeline/workflows/audit.mjs && echo "WORKFLOW SYNTAX OK"
+node -e '
+const fs=require("fs");
+let s=fs.readFileSync("plugins/altivum-feature-dev-pipeline/workflows/audit.mjs","utf8");
+s=s.replace(/export\s+const\s+meta/, "const meta");
+const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;
+new AsyncFunction("agent","parallel","pipeline","phase","log","args","budget","workflow", s);
+console.log("WORKFLOW SYNTAX OK");
+'
 ```
 Expected: `WORKFLOW SYNTAX OK`
 
