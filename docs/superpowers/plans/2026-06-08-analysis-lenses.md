@@ -818,9 +818,10 @@ From `$ARGUMENTS`, derive:
 - `lenses` — any recognized lens names present (`eval`, `improve`, `improve-ui`, `improve-x2`, `enhance`); default to all five if none are named.
 
 ## Preferred path — Workflow tool
-Running this command is itself the user's opt-in to multi-agent orchestration, so use the Workflow tool to run the plugin's shipped orchestration script, passing `{ path, lenses }`:
-- Invoke `Workflow({ scriptPath: "<plugin-root>/workflows/audit.mjs", args: { path, lenses } })`, where `<plugin-root>` is this plugin's directory. If the environment exposes `${CLAUDE_PLUGIN_ROOT}`, use `${CLAUDE_PLUGIN_ROOT}/workflows/audit.mjs`; otherwise locate `workflows/audit.mjs` under this plugin (it sits beside this `commands/` directory).
-- The script fans the read-only analyzer subagents out per lens and focus area in parallel, then synthesizes across lenses and returns a `brief`. Present that brief to the user verbatim (lightly formatted), then do the handoff below.
+Running this command is itself the user's opt-in to multi-agent orchestration, so use the Workflow tool to run the plugin's shipped orchestration script, passing `{ path, lenses }`. Note: `${CLAUDE_PLUGIN_ROOT}` does NOT expand inside command bodies, so resolve the script by locating it, then prefer running it inline:
+1. Locate the shipped script `workflows/audit.mjs` inside this plugin's installed directory — e.g. Glob for `**/altivum-feature-dev-pipeline/workflows/audit.mjs` (it sits beside this command's `commands/` directory).
+2. **Read** that file and run it inline: `Workflow({ script: <file contents>, args: { path, lenses } })`. Inline `script` is the most robust form. (`Workflow({ scriptPath: <absolute path to audit.mjs>, args: { path, lenses } })` may also work where supported.)
+3. The script fans the read-only analyzer subagents out per lens and focus area in parallel, then synthesizes across lenses and returns a `brief`. Present that brief to the user (lightly formatted), then do the handoff below.
 
 ## Fallback — no Workflow tool
 If the Workflow tool is unavailable in this environment, do the equivalent yourself:
