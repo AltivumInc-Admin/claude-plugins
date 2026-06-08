@@ -2,6 +2,9 @@
   "name": "altivum-feature-dev-pipeline",
   "description": "Altivum's eval -> plan -> execute -> deploy feature-development pipeline as one refinable, versioned workflow. Provides a /ship orchestrator plus the individual phase commands, deploy-validator and security-reviewer subagents, and a blocking production-deploy gate.",
   "version": "0.2.0",
-  "author": { "name": "Altivum Inc." },
+  "author": { "name": "Altivum Inc.", "url": "https://altivum.io" },
+  "homepage": "https://github.com/AltivumInc-Admin/claude-plugins-public",
+  "repository": "https://github.com/AltivumInc-Admin/claude-plugins-public",
+  "license": "Apache-2.0",
   "keywords": ["workflow", "pipeline", "eval", "plan", "execute", "deploy", "aws"]
 }
