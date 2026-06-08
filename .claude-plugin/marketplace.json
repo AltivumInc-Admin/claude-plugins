@@ -1,0 +1,14 @@
+{
+  "name": "altivum",
+  "owner": { "name": "Altivum Inc." },
+  "metadata": {
+    "description": "Altivum's internal Claude Code plugins — workflow tooling for the team."
+  },
+  "plugins": [
+    {
+      "name": "altivum-feature-dev-pipeline",
+      "source": "./plugins/altivum-feature-dev-pipeline",
+      "description": "eval -> plan -> execute -> deploy feature-development pipeline (/ship orchestrator + phase commands + deploy-validator & security-reviewer subagents + blocking pre-deploy gate)."
+    }
+  ]
+}
