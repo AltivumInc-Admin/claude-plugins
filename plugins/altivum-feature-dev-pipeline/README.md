@@ -18,6 +18,7 @@ altivum-feature-dev-pipeline/
 │   ├── improve-x2.md        # /…:improve-x2 — researched frontier / distinctiveness lens
 │   ├── enhance.md           # /…:enhance — UX-friction lens
 │   ├── recon.md             # /…:recon — Workflow-powered multi-lens audit → unified brief
+│   ├── refine.md            # /…:refine — continuous quality-gated loop → auto-PR + auto-merge
 │   ├── plan.md              # /…:plan — detailed implementation plan(s)
 │   ├── execute.md           # /…:execute — implement the plan (TDD + verification)
 │   └── deploy.md            # /…:deploy — safe deploy (change-set review, migrations, verify)
@@ -25,10 +26,12 @@ altivum-feature-dev-pipeline/
 │   ├── codebase-analyzer.md # read-only deep analyzer for one focus area (layer / UX flow)
 │   ├── ui-auditor.md        # read-only UI-dimension auditor (typography, color, motion, …)
 │   ├── frontier-researcher.md # read-only live-web researcher for one angle
+│   ├── functional-verifier.md # operates the change (Chrome/desktop or interface-level)
 │   ├── deploy-validator.md  # read-only subagent that verifies a deploy end-to-end
 │   └── security-reviewer.md # read-only subagent that reviews changes for security issues
 ├── workflows/
-│   └── audit.mjs            # recon orchestration script (parallel fan-out → synthesis)
+│   ├── audit.mjs            # recon orchestration script (parallel fan-out → synthesis)
+│   └── refine-cycle.mjs     # refine per-cycle engine (parallel build → integrate → review)
 └── hooks/
     ├── hooks.json           # PreToolUse(Bash) → BLOCKING pre-deploy gate (active)
     ├── pre-deploy-gate.sh   # blocks prod-mutating deploys until explicitly approved
@@ -78,6 +81,30 @@ agents — scope it with a path and/or a lens subset, e.g. `recon src/reports ui
 If the Workflow tool isn't present (older Claude Code / some headless contexts) it falls back to
 dispatching the same subagents via the Task tool, then to inline analysis — same unified output.
 
+## Refinement loop (`:refine`)
+
+`/altivum-feature-dev-pipeline:refine [path] [lenses…]` turns the plugin into a continuous,
+quality-gated improvement loop. Each cycle:
+
+1. **recon** finds the highest-impact improvements (ranked brief).
+2. **✋ you pick** which to take — the *one routine stop*.
+3. picked items are **built in parallel**, each in its own git worktree (`refine-cycle.mjs`).
+4. a **high quality bar must pass** before anything ships — the critical must-pass is that the
+   `functional-verifier` agent can actually **operate the change** (web UI via Claude-in-Chrome,
+   non-web via its real interface), plus build/lint/typecheck/tests, `security-reviewer`, and an
+   adversarial review panel.
+5. on green, it **auto-opens a PR and auto-merges** once all checks pass — no "make a PR" / "merge
+   it" stops. Deploy is downstream of merge (your CI/CD).
+6. it **loops**, re-scanning the improved code, until you say `done` at the pick gate.
+
+Flags: `--auto-pick[=N]` (+ required `--max-cycles=N`), `--confirm-merge` (optional 2nd stop),
+`--no-merge`, `--max-parallel=N`, `--max-remediation=N`. Override commands/criteria via an optional
+`.altivum/refine.json`. It only halts outside the pick gate for *exceptions* (gate can't go green,
+CI stays red, or an unresolvable conflict).
+
+`:refine` is the looping, self-merging counterpart to `:ship` (which is one gated pass for a goal
+you state).
+
 ## Use
 
 ```
@@ -118,8 +145,8 @@ infrastructure:
 ## Refine over time
 
 - Edit any `commands/*.md` or `agents/*.md` to improve a phase or lens — they're just prompts.
-- Edit `workflows/audit.mjs` to tune the `recon` fan-out (which lenses, which focus areas).
-- **Bump `version` in `.claude-plugin/plugin.json`** when you cut a release; reinstall to pick up changes. (This release: `0.3.0` — added the five analysis lenses, three read-only analysis subagents, and the Workflow-powered `recon` audit.)
+- Edit `workflows/audit.mjs` / `workflows/refine-cycle.mjs` to tune the `recon` fan-out or the `refine` cycle engine.
+- **Bump `version` in `.claude-plugin/plugin.json`** when you cut a release; reinstall to pick up changes. (This release: `0.4.0` — added the `/refine` continuous quality-gated loop, the `functional-verifier` subagent, and the `refine-cycle.mjs` per-cycle engine, on top of 0.3.0's analysis lenses + `recon` audit.)
 - Add more automation under `hooks/` and more subagents under `agents/`.
 
 ## Going headless (CI)

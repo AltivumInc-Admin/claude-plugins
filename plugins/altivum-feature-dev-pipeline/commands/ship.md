@@ -37,3 +37,5 @@ The phase logic lives in the sibling commands of this plugin — apply the same 
 - **Stay faithful to the user's decisions** from each gate; don't silently expand scope.
 
 If the user passed a single phase name in `$ARGUMENTS` (e.g. "just eval"), run only that phase.
+
+For **continuous improvement** (an ongoing loop rather than one stated goal), use `/altivum-feature-dev-pipeline:refine` instead — it runs recon → pick → parallel build → quality gate → auto-PR → auto-merge, and loops with a single routine stop.
