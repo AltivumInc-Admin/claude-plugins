@@ -1,25 +1,30 @@
-# altivum-claude-plugins
+# altivum-claude-plugins (PRIVATE dev repo)
 
-Altivum's internal **Claude Code plugin marketplace**. Add this repo once and the
-team can install any Altivum plugin from it.
+Altivum's **private** Claude Code plugin dev repo — full history, work-in-progress, and
+the source of truth for our plugins. Marketplace name: **`altivum-dev`** (team-only).
 
-## Add the marketplace
+> **Hybrid model:** develop + iterate here (private); ship vetted, stable releases to the
+> **public** repo [`AltivumInc-Admin/claude-plugins-public`](https://github.com/AltivumInc-Admin/claude-plugins-public)
+> (marketplace name `altivum`) via [`scripts/release.sh`](scripts/release.sh). End users /
+> the community install from the public repo; the team can also dogfood from here.
 
+## Team install (from this private repo)
+
+Requires GitHub read access to this private repo (your normal `gh`/SSH git creds).
 ```bash
-# from a git remote (once it's pushed)
 claude plugin marketplace add AltivumInc-Admin/claude-plugins
-# or from a local clone
-claude plugin marketplace add ~/dev/altivum-claude-plugins
+claude plugin install altivum-feature-dev-pipeline@altivum-dev
 ```
 
-## Install a plugin
+## Release to the public repo
 
+After bumping the plugin's `version` in its `plugin.json` and validating:
 ```bash
-claude plugin install altivum-feature-dev-pipeline@altivum
+scripts/release.sh                          # default: altivum-feature-dev-pipeline
+# scripts/release.sh <plugin-name>          # for a specific plugin
 ```
-
-Update later by bumping the plugin's `version` and re-running `claude plugin install`
-(or `claude plugin update`).
+This clones/updates the public working copy, mirrors the plugin dir, validates, then
+commits + tags (`<plugin>-v<version>`) + pushes to `claude-plugins-public`.
 
 ## Plugins in this marketplace
 

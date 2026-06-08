@@ -29,19 +29,15 @@ Commands are namespaced once installed: `/altivum-feature-dev-pipeline:ship`, `:
 
 ## Install
 
-**Quick (local, for trying it):**
 ```bash
-claude --plugin-dir ~/dev/altivum-dev/altivum-feature-dev-pipeline
-```
-
-**As a marketplace (recommended — supports versioned updates & team sharing):**
-```bash
-# point Claude Code at this repo as a marketplace, then install the plugin
-claude plugin marketplace add ~/dev/altivum-dev/altivum-feature-dev-pipeline
+claude plugin marketplace add AltivumInc-Admin/claude-plugins-public
 claude plugin install altivum-feature-dev-pipeline@altivum
 ```
-To share with the team, push this directory to a git repo and
-`claude plugin marketplace add <git-url>` instead of the local path.
+
+To try a local checkout without installing:
+```bash
+claude --plugin-dir <path-to-this-plugin-dir>
+```
 
 > Verify the exact `plugin`/`marketplace` subcommands against your Claude Code version
 > (`claude plugin --help`); the manifest schemas here follow the current docs.

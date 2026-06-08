@@ -1,8 +1,8 @@
 {
-  "name": "altivum",
+  "name": "altivum-dev",
   "owner": { "name": "Altivum Inc." },
   "metadata": {
-    "description": "Altivum's internal Claude Code plugins — workflow tooling for the team."
+    "description": "Altivum's PRIVATE Claude Code plugin dev marketplace (team-only). Public releases live in the 'altivum' marketplace (AltivumInc-Admin/claude-plugins-public)."
   },
   "plugins": [
     {
