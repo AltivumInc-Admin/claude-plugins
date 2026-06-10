@@ -323,7 +323,7 @@ auto-merge, deploy safety rails — rebuilt around an intent. What changed is th
 | | feature-dev-pipeline | hone |
 |---|---|---|
 | Question | What could this become? | What is this trying to be, and where does it fall short? |
-| Analysis | Five lenses, each **required** to propose 3 additions | Four sensors, each **allowed** to find nothing |
+| Analysis | Five lenses with addition quotas (three demand exactly 3 proposals; eval 2-4) | Four sensors, each **allowed** to find nothing |
 | Target | None — code analyzed in a vacuum | The intent; every gap cites its clause |
 | Market input | Researched trends became recommendations | Scout evidence goes to the journal; only the inventor turns signal into work |
 | Output vocabulary | Moves, upgrades, bold bets | Gap, drift, fidelity, quarter-turn |
