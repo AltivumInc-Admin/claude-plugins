@@ -13,7 +13,7 @@ The ONLY routine stop is the **pick gate** — that is where taste lives. Auto-P
 
 ## MOUNT (once, before the loop)
 1. **Intent:** read `.altivum/intent.md`. Missing → STOP and offer `/hone:intent` (the mounting rule — sensors have nothing to measure against). Keep the full text for every cycle.
-2. **Repo:** a **clean** git working tree; `gh` authed (`gh auth status`); the base branch (default `main`) current (`git checkout main && git pull`). Dirty tree or unauthed `gh` → STOP and ask.
+2. **Repo:** bind `repoRoot` = `git rev-parse --show-toplevel`; a **clean** git working tree; `gh` authed (`gh auth status`); the base branch (default `main`) current (`git checkout main && git pull`). Dirty tree or unauthed `gh` → STOP and ask.
 3. Parse `$ARGUMENTS`:
    - `path`, `sensors` (any of `integrity coherence finish friction`), `scout` — scope the per-cycle scan (same parsing as `/hone:gap`; if no sensors given, present the sensor toggle ONCE here and reuse the selection every cycle).
    - Flags: `--auto-pick[=N]` (default N=3; **requires** `--max-cycles`), `--max-cycles=N`, `--confirm-merge`, `--no-merge`, `--max-parallel=N`, `--max-remediation=N` (default 2).
@@ -70,7 +70,7 @@ Append to `.altivum/journal.md` in the repo (create with a `# Hone Journal` head
     Could not close: <turns dropped/failed and why, or "—">
     Signal: <scout evidence + clause-less findings, one line each, or "—">
 
-Dates come from `date +%Y-%m-%d` (Bash) — never guessed. "Could not close within living intent" entries are how core-pressure becomes visible over time — record them faithfully; attach no mechanism. Journal commit mechanics: after a merge, commit the entry to `<base>` and push (message `hone: journal cycle <N>`); if the base branch is protected and rejects direct pushes, carry the entry into the next cycle's branch or a tiny journal PR at session end. Under `--no-merge`, push the entry as an additional commit on the open cycle branch so it lands with the eventual merge.
+Dates come from `date +%Y-%m-%d` (Bash) — never guessed. "Could not close within living intent" entries are how core-pressure becomes visible over time — record them faithfully; attach no mechanism. Journal commit mechanics: after a merge, commit the entry to `<base>` and push (message `hone: journal cycle <N>`); if the base branch is protected and rejects direct pushes, carry the entry into the next cycle's branch or a tiny journal PR at session end. Under `--no-merge`, push the entry as an additional commit on the open cycle branch so it lands with the eventual merge (journal-only — never append code after the gate has run).
 **Vault mirror:** if `~/.altivum/hone.json` has a non-null `vault`, append the same entry to `<vault>/Hone/<repo-name>.md` (create the folder/file on first write with YAML frontmatter `project`, `cycle`, `date`, `tags: [hone]`; update `cycle` and `date` on each append; add `[[wikilinks]]` where natural). **Collision guard:** if the file already exists and its frontmatter `project` differs from this repo (compare remote URL or absolute path), write to `<vault>/Hone/<repo-name>-<parent-dir-name>.md` instead — never clobber another project's logbook. Vault missing/unwritable → skip with a one-line note; NEVER fail the cycle over the logbook.
 
 ### 8. LOOP

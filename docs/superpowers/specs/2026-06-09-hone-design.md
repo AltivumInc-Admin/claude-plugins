@@ -193,8 +193,9 @@ Exception stops, remediation bounds, and PR/merge mechanics are unchanged from t
 ## 7. The journal & the Obsidian logbook
 
 **Canonical journal:** `.altivum/journal.md` in the target repo — append-only, one entry per
-cycle, **written by the `loop` and `turn` commands** (agents stay read-only; `/hone:turn`
-appends its own entry, including any clause-less-work reminder it issued, §8). Versioned with the code;
+cycle, **written by the `loop`, `turn`, and (signal entries only) `gap` commands** (agents stay
+read-only; `/hone:turn` appends its own entry, including any clause-less-work reminder it
+issued, §8; a standalone `/hone:gap` appends scout signal as a dated Signal entry). Versioned with the code;
 machine-readable memory the future outer loop and research agent will be designed from.
 
 Entry shape:
