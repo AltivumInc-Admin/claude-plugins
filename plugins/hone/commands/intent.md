@@ -46,6 +46,7 @@ If `~/.altivum/hone.json` does not exist, ask ONE question: "Mirror the hone jou
 On "no": write `{ "vault": null }` (same `mkdir -p ~/.altivum` first) so the question is never re-asked. The vault path is a fact about this machine — never commit it to the repo.
 
 ## Rules
+- Dates are real: obtain today's date with `date +%Y-%m-%d` (Bash) whenever you draft or display dated entries — never guess it.
 - The inventor owns every word of the intent. You interview, draft, and transcribe — you do not decide.
 - Never auto-revise the intent from sensor findings, signal, or your own judgment. Signal never creates work, and it never edits intent either — only the inventor does, by hand.
 - Keep the file short enough to read in one sitting. An intent nobody re-reads anchors nothing.
