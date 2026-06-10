@@ -13,6 +13,13 @@ Arguments: **$ARGUMENTS**
 - `show` (or no arguments): display the current intent verbatim, note the date of its newest Living revision, and stop.
 - If the user asked to change it: do NOT edit it for them wholesale. Display it, remind them the Living stratum is edited **by hand, deliberately** (each revision dated, with a one-line "because" naming the evidence that earned it) and that the Core is near-immutable — if the Core must change, that is a pivot-or-kill conversation, not an edit. Offer to open the file for them to edit; you may help with wording they dictate, but the convictions must be theirs.
 
+## Before the interview — know the codebase first
+An interviewer who has not read the code asks blind questions. Before asking the inventor anything: assess whether you already have real context on this codebase (from the current session or project memory). If you do not, SAY SO and execute a THOROUGH review — not a cursory skim:
+- Read the README, manifests, configs, and entry points; map the directory structure and the main components.
+- Trace the primary user/data flows end to end; identify the stack, the build/test workflow, and what the software observably DOES.
+- For a non-trivial codebase, dispatch `hone:codebase-analyzer` subagents in parallel (one per layer: frontend / backend-API / data & infrastructure) and synthesize their findings into your working picture.
+The review grounds the interview — sharper questions, evidence-backed follow-ups ("I see X in src/y — is that part of right?"), and draft language that names real things. It must NOT author the intent: understanding is yours; convictions are the inventor's. Never skip the interview because the review made you confident.
+
 ## If `.altivum/intent.md` does not exist — the interview
 Conduct a guided interview, ONE question at a time (use the AskUserQuestion picker where options fit, free text otherwise). Push for **concrete, testable language** — "checkout completes in under 10 seconds," not "fast and delightful." Vague intent produces unfalsifiable clause citations and ruins the loop downstream.
 
