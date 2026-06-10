@@ -15,6 +15,8 @@ claude plugin marketplace add AltivumInc-Admin/claude-plugins-public
 claude plugin install hone@altivum
 ```
 
+(Or try a local checkout without installing: `claude --plugin-dir <path-to-plugins/hone>`.)
+
 Then, in the project you want to hone:
 
 ```
@@ -23,7 +25,7 @@ Then, in the project you want to hone:
 /hone:loop       # hone: pick gaps, agents build, gate, auto-PR/auto-merge, journal, repeat
 ```
 
-> **⚠ `/hone:loop` merges to your base branch unattended** once you pick gaps and the gate
+> **Caution: `/hone:loop` merges to your base branch unattended** once you pick gaps and the gate
 > goes green. First runs: use `/hone:loop --no-merge` (leaves green PRs open for review)
 > or `--confirm-merge`. On a repo with no remote CI, the local gate is the only bar.
 
