@@ -35,6 +35,7 @@ const SENSOR_CONFIG = {
   },
 }
 
+// 'field-specific' is omitted by design — it needs a caller-posed question this workflow does not take.
 const SCOUT_ANGLES = ['category movement', 'user expectations & complaints', 'emerging platform capabilities']
 
 const ALL = Object.keys(SENSOR_CONFIG)
@@ -45,6 +46,7 @@ let sensors = requested.filter((s) => SENSOR_CONFIG[s])
 if (!sensors.length) sensors = ALL
 const scout = !!(args && args.scout)
 const scope = (args && args.path) ? args.path : 'the whole repository'
+// Intent is contractually short (a one-sitting read, per /hone:intent); interpolated verbatim into every prompt.
 const intent = (args && typeof args.intent === 'string' && args.intent.trim()) ? args.intent : ''
 if (!intent) {
   // Same shape as the success return so callers can destructure safely.
@@ -102,8 +104,13 @@ const dossier = sensorResults
   )
   .join('\n\n---\n\n')
 
-const report = sensorResults.length
-  ? await agent(
+if (!sensorResults.length) {
+  // Distinct degraded state: every sensor failed or was skipped. NEVER emit the
+  // zero-gap success sentence here — a failed scan is not a clean repo.
+  return { error: 'gap-scan collected no sensor output — every sensor failed or was skipped; results are not trustworthy', scope, sensors, report: null, signal: scoutSignal }
+}
+
+const report = await agent(
       `You are synthesizing an intent-anchored gap scan of ${scope}.\n\n` +
         `THE PROJECT'S INTENT:\n${intent}\n\n` +
         `SENSOR READINGS (${sensorResults.length} sensor(s)):\n\n${dossier}\n\n` +
@@ -118,7 +125,11 @@ const report = sensorResults.length
         `- If there are NO honest gaps, say exactly: "No gaps found against intent at current resolution." — that is a successful scan; do not pad.\n` +
         `- End by telling the user to pick gap numbers (in /hone:loop) or run /hone:plan <numbers> then /hone:execute.`,
       { label: 'synthesize', phase: 'Synthesize' },
-    )
-  : 'No gaps found against intent at current resolution. (No sensor returned findings.)'
+)
+
+if (!report) {
+  // Synthesis agent failed — preserve the sensors' work for the caller instead of dropping it.
+  return { error: 'synthesis agent failed — raw sensor dossier preserved in the dossier field', scope, sensors, report: null, dossier, signal: scoutSignal }
+}
 
 return { scope, sensors, report, signal: scoutSignal }
