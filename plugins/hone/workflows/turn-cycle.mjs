@@ -91,6 +91,11 @@ if (!items.length) {
   return { error: 'no items provided', integratedBranch: cycleBranch, built: [], failedItems: [], confirmedReviewDefects: [] }
 }
 
+const idList = items.map((it) => String(it.id))
+if (new Set(idList).size !== idList.length) {
+  return { error: 'duplicate item ids — refusing to build colliding branches', integratedBranch: null, checks: null, conflictedItems: [], built: [], failedItems: [], confirmedReviewDefects: [] }
+}
+
 // Per-cycle branch prefix so item branches never collide across cycles. cycleBranch is
 // already unique per cycle (hone/cycle-<N>-<slug>); sanitize it into a branch-safe token.
 const cyclePrefix = cycleBranch.replace(/[^a-zA-Z0-9._-]/g, '-')
@@ -99,25 +104,27 @@ log(`turn-cycle: ${items.length} item(s) onto ${cycleBranch} from ${base}`)
 
 // Phase 1 — build each item on its OWN per-cycle branch in its OWN worktree.
 phase('Build')
-const buildThunk = (it) => () =>
-  agent(
+const buildThunk = (it) => () => {
+  const safeId = String(it.id).replace(/[^a-zA-Z0-9._-]/g, '-')
+  return agent(
     `Implement ONE refinement item in the git repo at ${repoRoot}.\n` +
       `Item id: ${it.id}\nTitle: ${it.title}\nDetails: ${it.desc || ''}\n\n` +
-      `Branch to create: hone/item-${cyclePrefix}-${it.id}\n\n` +
+      `Branch to create: hone/item-${cyclePrefix}-${safeId}\n\n` +
       `Steps (use Bash; keep the change scoped to THIS item only):\n` +
       `1. Make an isolated worktree on a fresh branch. Other item builders may be creating worktrees against this SAME repo concurrently, so retry on lock/contention errors:\n` +
       `   WT=$(mktemp -d)\n` +
       `   for attempt in 1 2 3 4 5; do\n` +
-      `     git -C ${repoRoot} worktree add -B hone/item-${cyclePrefix}-${it.id} "$WT" ${base} && break\n` +
+      `     git -C ${repoRoot} worktree add -B hone/item-${cyclePrefix}-${safeId} "$WT" ${base} && break\n` +
       `     sleep "$attempt"   # back off; another builder likely holds the .git/worktrees lock\n` +
       `   done\n` +
       `   cd "$WT"\n` +
       `2. Implement the item with TDD (write a failing test, then make it pass), following existing project conventions.\n` +
       `3. Commit with a clear message. Do NOT remove the worktree — the integrator needs the branch.\n` +
-      `4. Report status 'built' with branch hone/item-${cyclePrefix}-${it.id}, the worktree path "$WT", the commit SHA, a one-line summary, and files changed.\n` +
+      `4. Report status 'built' with branch hone/item-${cyclePrefix}-${safeId}, the worktree path "$WT", the commit SHA, a one-line summary, and files changed.\n` +
       `If you cannot implement it cleanly, make NO commit and report status 'failed' with a reason.`,
-    { label: `build:${cyclePrefix}:${it.id}`, phase: 'Build', schema: BUILD_SCHEMA },
+    { label: `build:${cyclePrefix}:${safeId}`, phase: 'Build', schema: BUILD_SCHEMA },
   )
+}
 
 let built = []
 if (maxParallel > 0) {
@@ -136,27 +143,34 @@ const failedItems = built.filter((b) => b && b.status === 'failed')
 // Phase 2 — integrate built branches + run automated checks (single agent, main worktree).
 phase('Integrate')
 const branchList = okItems.map((b) => b.branch).filter(Boolean).join(', ')
-const worktreeList = okItems.map((b) => b.worktree).filter(Boolean).join(', ')
+const worktreeList = built.filter(Boolean).map((b) => b.worktree).filter(Boolean).join(', ')
 const integration = await agent(
   `Integrate built refinement items in the git repo at ${repoRoot}.\n` +
     `Target branch: ${cycleBranch}. Base: ${base}. Item branches to merge (in order): ${branchList || '(none)'}.\n\n` +
     `Steps (Bash; capture REAL output):\n` +
     `1. git -C ${repoRoot} checkout -B ${cycleBranch} ${base}\n` +
+    `1b. BEFORE any merge, run the coverage command once to capture the BASE baseline (at this moment the cycle branch equals base).\n` +
     `2. For each item branch, merge it: git -C ${repoRoot} merge --no-ff <branch>. If it conflicts, run git -C ${repoRoot} merge --abort, record that item id in conflictedItems, and skip it (do not block the others).\n` +
     `3. Run the automated checks and record each result, citing key output:\n` +
     `   build: ${checks.build || '(auto-detect from package.json scripts / Makefile)'}\n` +
     `   lint: ${checks.lint || '(auto-detect)'}\n` +
     `   typecheck: ${checks.typecheck || '(auto-detect)'}\n` +
     `   test: ${checks.test || '(auto-detect)'}\n` +
-    `   coverage: ${checks.coverage || '(auto-detect; run coverage and confirm it did NOT decrease vs ' + base + ')'}\n` +
+    `   coverage: ${checks.coverage || '(auto-detect; run coverage post-merge and compare against the BASE baseline captured in step 1b — mark fail if decreased)'}\n` +
     `   Mark a check 'not-applicable' ONLY when the project genuinely has no such step (e.g. no typechecker in a plain-JS repo). If a check is EXPECTED for this kind of project but you cannot detect or run it, mark it 'fail' and explain in notes — never pass it off as 'not-applicable'. Any non-zero run is 'fail'.\n` +
     `4. Clean up the item worktrees so they don't accumulate: for each path in [${worktreeList || 'none'}] run git -C ${repoRoot} worktree remove --force <path> (ignore errors), then ALWAYS run git -C ${repoRoot} worktree prune at the end.\n` +
     `Report the integrated branch (${cycleBranch}), all five check results (build/lint/typecheck/test/coverage), the conflictedItems list, and brief notes.`,
   { label: 'integrate', phase: 'Integrate', schema: INTEGRATE_SCHEMA },
 )
 
+if (!integration) {
+  // Integration agent failed — never let a null read as a clean pass.
+  return { error: 'integration agent produced no result — cycle branch state unknown; treat as gate failure', integratedBranch: null, checks: null, conflictedItems: [], built: okItems, failedItems, confirmedReviewDefects: [] }
+}
+
 // Phase 3 — adversarial review panel over the integrated diff, then verify high/critical findings.
 phase('Review')
+// Review/verify agents are deliberately generic; the dedicated hone:security-reviewer and functional-verifier run separately in the loop's quality gate.
 const DIMS = ['correctness & bugs', 'security', 'scope & hygiene', 'tests & coverage']
 const reviews = await parallel(
   DIMS.map((d) => () =>
@@ -187,9 +201,9 @@ const confirmedReviewDefects = verified.filter((x) => x && x.real)
 log(`turn-cycle done: ${okItems.length} built, ${failedItems.length} failed, ${confirmedReviewDefects.length} confirmed defect(s)`)
 
 return {
-  integratedBranch: integration ? integration.integratedBranch : cycleBranch,
-  checks: integration ? integration.checks : null,
-  conflictedItems: integration ? integration.conflictedItems : [],
+  integratedBranch: integration.integratedBranch,
+  checks: integration.checks,
+  conflictedItems: integration.conflictedItems,
   built: okItems,
   failedItems,
   confirmedReviewDefects,
