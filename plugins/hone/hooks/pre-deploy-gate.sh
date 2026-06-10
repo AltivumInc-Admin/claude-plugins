@@ -4,6 +4,7 @@
 # Blocks production-MUTATING deploy commands until they are explicitly approved.
 # Safe/preview steps (sam build, sam package, create-change-set, describe-*,
 # dry-runs) are NOT blocked, so the normal deploy prep flow is unimpeded.
+# (amplify update-app and create-change-set are reminder-only by design — not blocked.)
 #
 # Exit codes (PreToolUse): 2 = block the tool call (stderr is shown to Claude);
 # 0 = allow. The gate always allows non-deploy commands.
@@ -22,7 +23,7 @@ input="$(cat 2>/dev/null)"
 DEPLOY_RE='sam[[:space:]]+deploy|cloudformation[[:space:]]+(execute-change-set|deploy|update-stack|delete-stack)|amplify[[:space:]]+start-job|cdk[[:space:]]+(deploy|destroy)|terraform[[:space:]]+(apply|destroy)|serverless[[:space:]]+deploy'
 
 if printf '%s' "$input" | grep -qiE "$DEPLOY_RE"; then
-  if printf '%s' "$input" | grep -qE 'HONE_DEPLOY_APPROVED=1'; then
+  if printf '%s' "$input" | grep -qF 'HONE_DEPLOY_APPROVED=1'; then
     exit 0  # explicitly approved — allow
   fi
   printf '%s\n' \
