@@ -35,20 +35,20 @@ Present the gap report grouped by intent clause. The inventor exercises taste:
 Record the picked gaps as `{ id, title, desc }` (id = stable number from the report; include the clause and proposed quarter-turn in `desc`).
 
 ### 3. TURN  (autonomous)
-Set `cycleBranch = hone/cycle-<N>-<slug>` (slug from the picked titles; unique per cycle). Locate + read `workflows/turn-cycle.mjs` and run `Workflow({ script, args: { items, base, cycleBranch, repoRoot, checks, maxParallel } })`. It builds the picked turns IN PARALLEL (each on its own branch in its own worktree, TDD), integrates them onto `cycleBranch`, runs the automated checks, and runs the adversarial review panel. Returns `{ integratedBranch, checks, conflictedItems, built, failedItems, confirmedReviewDefects }`.
+Set `cycleBranch = hone/cycle-<N>-<slug>` (slug from the picked titles; unique per cycle). Locate + read `workflows/turn-cycle.mjs` and run `Workflow({ script, args: { items, base, cycleBranch, repoRoot, checks, maxParallel } })` (`maxParallel` comes from `--max-parallel`; 0/omitted = the engine's own cap). It builds the picked turns IN PARALLEL (each on its own branch in its own worktree, TDD), integrates them onto `cycleBranch`, runs the automated checks, and runs the adversarial review panel. Returns `{ integratedBranch, checks, conflictedItems, built, failedItems, confirmedReviewDefects }`.
 
 ### 4. QUALITY GATE  (must be green before any PR)
 On `integratedBranch`, evaluate ALL of:
 - **Something actually shipped:** `built` non-empty AND the integrated diff vs `<base>` non-empty. Otherwise EXCEPTION — nothing to operate or ship; report and return to the pick gate (or exit).
 - **Functional operation (critical):** dispatch the `hone:functional-verifier` subagent with what changed (picked turns + files) and the `functional` config. Require verdict **OPERATED**. **CANNOT-OPERATE** fails the gate. For a **web/UI change**, an N/A or "browser unavailable" verdict ALSO fails (a web change that can't be driven is not shippable). A justified **N/A** is acceptable ONLY for genuinely non-operable changes (pure infra/config with no runtime surface).
-- **Automated checks:** `checks.build / lint / typecheck / test / coverage` each `pass` or a *legitimate* `not-applicable`. Any `fail` — including an expected-but-undetectable check — fails the gate. If the workflow result carries an `error` field or `checks` is null (integration failed), that is an EXCEPTION — report it; never read a missing checks object as a pass.
+- **Automated checks:** `checks.build / lint / typecheck / test / coverage` each `pass` or a *legitimate* `not-applicable`. Any `fail` — including an expected-but-undetectable check — fails the gate. If the workflow result carries an `error` field or `checks` is missing/null (integration failed), that is an EXCEPTION — report it; never read a missing checks object as a pass.
 - **Security:** dispatch `hone:security-reviewer` on the diff; no high/critical.
 - **Review panel:** `confirmedReviewDefects` is empty.
 - **Hygiene:** no secrets, no leftover TODO/placeholder/debug, diff scoped to the picked turns.
 - Note `conflictedItems` / `failedItems` — dropped this cycle; report them.
 
 ### 5. REMEDIATE  (autonomous, bounded by --max-remediation, default 2)
-Gate fails → for each failing criterion dispatch a fix (execute-style) agent scoped to that failure on `cycleBranch`, re-run only the failed checks/subagents, up to the bound.
+Gate fails → for each failing criterion dispatch a fix (execute-style) agent scoped to that failure on `cycleBranch`, re-run only the failed checks/subagents, up to the bound (the bound is per phase: local-gate remediation here and remote-CI remediation in step 6 each get up to N attempts).
 - One culprit turn still failing → **drop it**: rebuild `cycleBranch` from `<base>` merging only the surviving item branches, re-run the gate on the remainder, report the drop.
 - Still red with turns remaining → **EXCEPTION**: stop, report exactly what failed with evidence. **Never open a PR on a red gate.**
 
@@ -70,7 +70,7 @@ Append to `.altivum/journal.md` in the repo (create with a `# Hone Journal` head
     Could not close: <turns dropped/failed and why, or "—">
     Signal: <scout evidence + clause-less findings, one line each, or "—">
 
-Dates come from `date +%Y-%m-%d` (Bash) — never guessed. "Could not close within living intent" entries are how core-pressure becomes visible over time — record them faithfully; attach no mechanism. Commit the journal as part of the cycle branch when possible, else commit it to `<base>` directly after merge with message `hone: journal cycle <N>`.
+Dates come from `date +%Y-%m-%d` (Bash) — never guessed. "Could not close within living intent" entries are how core-pressure becomes visible over time — record them faithfully; attach no mechanism. Journal commit mechanics: after a merge, commit the entry to `<base>` and push (message `hone: journal cycle <N>`); if the base branch is protected and rejects direct pushes, carry the entry into the next cycle's branch or a tiny journal PR at session end. Under `--no-merge`, push the entry as an additional commit on the open cycle branch so it lands with the eventual merge.
 **Vault mirror:** if `~/.altivum/hone.json` has a non-null `vault`, append the same entry to `<vault>/Hone/<repo-name>.md` (create the folder/file on first write with YAML frontmatter `project`, `cycle`, `date`, `tags: [hone]`; update `cycle` and `date` on each append; add `[[wikilinks]]` where natural). **Collision guard:** if the file already exists and its frontmatter `project` differs from this repo (compare remote URL or absolute path), write to `<vault>/Hone/<repo-name>-<parent-dir-name>.md` instead — never clobber another project's logbook. Vault missing/unwritable → skip with a one-line note; NEVER fail the cycle over the logbook.
 
 ### 8. LOOP
