@@ -36,7 +36,7 @@ Use the Workflow tool to run the plugin's shipped scan script. `${CLAUDE_PLUGIN_
 
 ## 4. Fallback — no Workflow tool
 Dispatch the sensor subagents directly via the Task tool, in parallel, passing each the intent text:
-- `integrity`, `coherence` → `hone:codebase-analyzer`, focuses: frontend layer / backend-API layer / data & infrastructure layer (state the sensor's measure in the prompt).
+- `integrity`, `coherence` → `hone:codebase-analyzer`, focuses: frontend layer / backend/API layer / data & infrastructure layer (state the sensor's measure in the prompt).
 - `friction` → `hone:codebase-analyzer`, focus: "user-flow friction".
 - `finish` → `hone:ui-auditor`, dimensions: typography & rhythm, color & contrast, layout & spacing, motion, component-craft & polish.
 - scout → `hone:signal-scout`, angles: category movement, user expectations & complaints, emerging platform capabilities.
