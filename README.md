@@ -24,12 +24,13 @@ scripts/release.sh                          # default: altivum-feature-dev-pipel
 # scripts/release.sh <plugin-name>          # for a specific plugin
 ```
 This clones/updates the public working copy, mirrors the plugin dir, validates, then
-commits + tags (`<plugin>-v<version>`) + pushes to `claude-plugins-public`.
+commits + tags (`<plugin>--v<version>`, the `claude plugin tag` format) + pushes to `claude-plugins-public`.
 
 ## Plugins in this marketplace
 
 | Plugin | Version | What it does |
 |--------|---------|--------------|
+| [`hone`](plugins/hone) | 0.1.0 | Intent-anchored refinement loop: `/hone:intent` (author the north star) → `/hone:gap` (sensors measure deviation, clause-cited, zero-valid) → `/hone:loop` (pick → parallel build → functional gate → auto-PR/auto-merge → journal). Supersedes `altivum-feature-dev-pipeline`. |
 | [`altivum-feature-dev-pipeline`](plugins/altivum-feature-dev-pipeline) | 0.4.0 | `eval → plan → execute → deploy` pipeline: a `/ship` orchestrator + phase commands, five analysis lenses + `/recon` audit + `/refine` continuous quality-gated loop (auto-PR/auto-merge), read-only analysis & review subagents, and a blocking pre-deploy gate. |
 
 ## Repo layout
@@ -41,7 +42,10 @@ altivum-claude-plugins/
 ├── scripts/
 │   └── release.sh                # mirror + validate + tag + push a plugin to the public repo
 └── plugins/
-    └── altivum-feature-dev-pipeline/
+    ├── hone/
+    │   ├── .claude-plugin/plugin.json
+    │   ├── commands/  agents/  workflows/  hooks/  README.md
+    └── altivum-feature-dev-pipeline/   # superseded by hone; kept during transition
         ├── .claude-plugin/plugin.json
         ├── commands/  agents/  workflows/  hooks/  README.md
 ```

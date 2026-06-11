@@ -1,0 +1,10 @@
+{
+  "name": "hone",
+  "description": "Intent-anchored refinement loop. The inventor authors intent (what the software is for); sensors measure the gap between code and intent (allowed to find nothing); the inventor picks the quarter-turn; the actuator builds it under a hard quality gate (live functional operation, security, adversarial review) and auto-PRs/auto-merges on green; a journal remembers every cycle. Signal never creates work — only the inventor does. Supersedes altivum-feature-dev-pipeline.",
+  "version": "0.1.0",
+  "author": { "name": "Altivum Inc.", "url": "https://altivum.io" },
+  "homepage": "https://github.com/AltivumInc-Admin/claude-plugins-public",
+  "repository": "https://github.com/AltivumInc-Admin/claude-plugins-public",
+  "license": "Apache-2.0",
+  "keywords": ["refine", "intent", "gap", "craft", "loop", "quarter-turn", "refinement", "quality"]
+}
